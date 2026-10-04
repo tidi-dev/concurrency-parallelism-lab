@@ -1,6 +1,15 @@
 # Concurrency vs Parallelism Lab
 
-A small, browser-only demo. Pick an experiment, click **RUN**, watch the timeline.
+A small, browser-only demo. Pick a scenario, click **Start cooking**, watch the timeline.
+
+**Run with Docker** (nothing else to install):
+
+```bash
+docker compose up -d --build   # build + start → http://localhost:5199
+docker compose down            # stop + remove
+```
+
+**Or run locally** (for development, with hot reload):
 
 ```bash
 npm install
