@@ -1,0 +1,662 @@
+You are a senior JavaScript engineer and technical educator.
+
+Build a SMALL, frontend-only interactive demo that teaches me:
+
+1. Sequential execution
+2. Concurrency
+3. Parallelism
+4. Main-thread blocking
+5. Web Workers
+6. Concurrency limits
+
+The primary goal is learning through visualization.
+
+IMPORTANT:
+
+Keep this project intentionally small.
+
+DO NOT build:
+
+- backend
+- NestJS
+- database
+- Redis
+- Docker
+- API server
+- authentication
+- microservices
+- unnecessary abstractions
+
+Everything should run inside the browser.
+
+Use:
+
+- React or Next.js
+- TypeScript
+- Browser Web Workers for real CPU parallelism
+
+Prefer the simplest stack and smallest codebase possible.
+
+---
+
+# 1. Setup workflow
+
+Before implementation, inspect:
+
+https://github.com/obra/superpowers
+
+Determine its current recommended Claude Code setup.
+
+Do NOT blindly install every skill or agent.
+
+Only use capabilities relevant to this small project, such as:
+
+- planning
+- frontend implementation
+- testing
+- debugging
+- verification
+
+Do not spend excessive time configuring agents.
+
+The actual demo is the priority.
+
+---
+
+# 2. Main UI
+
+Create one page:
+
+Concurrency vs Parallelism Lab
+
+with four primary experiments:
+
+[ Sequential ]
+[ Concurrent ]
+[ Blocking ]
+[ Parallel ]
+
+Controls:
+
+Tasks:       [ 3 ]
+Duration:    [ 1000 ms ]
+Workers:     [ 3 ]
+
+[ RUN ]
+
+Then show a live timeline.
+
+Example:
+
+Sequential
+
+Task 1  █████
+Task 2       █████
+Task 3            █████
+
+Total: ~3 sec
+
+
+Concurrent
+
+Task 1  █████
+Task 2  █████
+Task 3  █████
+
+Total: ~1 sec
+
+
+Parallel
+
+Worker 1  █████
+Worker 2  █████
+Worker 3  █████
+
+Total: depends on CPU/workload
+
+The visualization is the most important part.
+
+---
+
+# 3. Experiment — Sequential
+
+Simulate async tasks such as:
+
+async function task() {
+    await sleep(1000)
+}
+
+Execute:
+
+await task()
+await task()
+await task()
+
+Expected timeline:
+
+Task 1 █████
+Task 2      █████
+Task 3           █████
+
+Total:
+
+~3 seconds
+
+Explain:
+
+Only one task is being awaited before the next starts.
+
+---
+
+# 4. Experiment — Concurrency
+
+Run the same simulated I/O tasks using:
+
+await Promise.all([
+    task(),
+    task(),
+    task()
+])
+
+Expected:
+
+Task 1 █████
+Task 2 █████
+Task 3 █████
+
+Total:
+
+~1 second
+
+Explain clearly:
+
+These tasks are CONCURRENT.
+
+Do NOT say they are necessarily running JavaScript simultaneously on multiple CPU cores.
+
+The tasks overlap because JavaScript starts them and waits for asynchronous operations to complete.
+
+Teach:
+
+CONCURRENCY ≠ PARALLELISM
+
+---
+
+# 5. Experiment — Main-thread blocking
+
+Create a CPU-heavy JavaScript function.
+
+For example:
+
+calculatePrimes(...)
+
+or another deterministic CPU loop.
+
+Run several CPU-heavy tasks on the main JavaScript thread.
+
+Show that the UI becomes temporarily unresponsive.
+
+Add a small animation such as:
+
+● moving continuously
+
+or:
+
+UI heartbeat: 1 2 3 4 ...
+
+When CPU-heavy JavaScript blocks the main thread, the animation should visibly freeze.
+
+This is intentional and educational.
+
+Explain:
+
+JavaScript cannot process UI updates while synchronous CPU work is blocking the main thread.
+
+Also demonstrate that:
+
+Promise.all([
+    cpuTask(),
+    cpuTask(),
+    cpuTask()
+])
+
+does NOT magically make synchronous CPU work parallel.
+
+This misconception is extremely important to address.
+
+---
+
+# 6. Experiment — Real parallelism
+
+Implement the same CPU-heavy workload using browser Web Workers.
+
+Architecture:
+
+Browser Main Thread
+       │
+       ├── Worker 1 → CPU Task 1
+       ├── Worker 2 → CPU Task 2
+       └── Worker 3 → CPU Task 3
+
+Each worker should report:
+
+workerId
+taskId
+startedAt
+finishedAt
+duration
+
+Visualize:
+
+Worker 1 █████████
+Worker 2 █████████
+Worker 3 █████████
+
+The UI heartbeat should continue running while workers perform CPU work.
+
+Explain:
+
+This is actual parallel-capable execution.
+
+Multiple workers may execute on different CPU cores.
+
+Use:
+
+navigator.hardwareConcurrency
+
+to display the browser's reported logical processor count.
+
+For example:
+
+Logical processors reported by browser: 8
+
+Allow:
+
+Workers:
+
+[1] [2] [4] [8]
+
+Then let me compare execution time.
+
+Explain why:
+
+MORE WORKERS != ALWAYS FASTER
+
+because of:
+
+- available CPU cores
+- scheduling
+- worker overhead
+- communication overhead
+- contention
+
+---
+
+# 7. Side-by-side comparison
+
+Create a comparison mode.
+
+Show:
+
+SEQUENTIAL
+
+Main Thread
+
+Task A ████
+          Task B ████
+                    Task C ████
+
+
+CONCURRENT
+
+Main Thread / Async waiting
+
+Task A ████
+Task B ████
+Task C ████
+
+
+PARALLEL
+
+Worker 1 ███████
+Worker 2 ███████
+Worker 3 ███████
+
+Make the visual difference immediately understandable.
+
+---
+
+# 8. Add one concurrency-limit experiment
+
+Keep this simple.
+
+Create:
+
+10 simulated async tasks
+
+Each takes:
+
+1000ms
+
+Allow concurrency:
+
+[1] [2] [3] [5] [10]
+
+For concurrency = 3:
+
+Task 1 █████
+Task 2 █████
+Task 3 █████
+Task 4      █████
+Task 5      █████
+Task 6      █████
+Task 7           █████
+
+Show:
+
+Running: 3
+Waiting: 7
+Completed: 0
+
+Then update live.
+
+Explain why real applications often limit concurrency rather than running thousands of operations at once.
+
+---
+
+# 9. Metrics
+
+Keep metrics minimal.
+
+Show:
+
+Total Tasks
+Running
+Waiting
+Completed
+Total Duration
+Peak Concurrency
+
+For Web Workers also show:
+
+Workers
+Logical Processors
+
+Do not build complex observability infrastructure.
+
+---
+
+# 10. Educational explanation
+
+For each experiment show a small explanation panel.
+
+For example:
+
+## Concurrent
+
+Tasks overlap in time, but this does not necessarily mean JavaScript is executing them simultaneously.
+
+Typical example:
+
+Multiple network requests.
+
+---
+
+## Parallel
+
+Multiple pieces of work can actually execute simultaneously using different workers/CPU cores.
+
+Typical example:
+
+CPU-heavy image processing.
+
+---
+
+# 11. Important misconceptions
+
+The demo should explicitly teach that these statements are wrong or incomplete:
+
+"Concurrency = parallelism"
+
+"Promise.all makes JavaScript parallel"
+
+"async/await creates threads"
+
+"100 promises = 100 threads"
+
+"Web Workers are the same as promises"
+
+"More workers always means faster"
+
+"async makes CPU-heavy work faster"
+
+Use the experiments to demonstrate WHY.
+
+---
+
+# 12. Keep architecture extremely small
+
+Prefer something approximately like:
+
+src/
+  components/
+    ExperimentControls.tsx
+    Timeline.tsx
+    Metrics.tsx
+    Explanation.tsx
+
+  experiments/
+    sequential.ts
+    concurrent.ts
+    blocking.ts
+    parallel.ts
+    concurrencyLimit.ts
+
+  workers/
+    cpu.worker.ts
+
+  App.tsx
+
+README.md
+
+Adjust according to the chosen React/Next.js setup.
+
+Do NOT create unnecessary:
+
+repositories
+services
+controllers
+DTOs
+domain layers
+dependency injection
+state-management frameworks
+
+Use React state/hooks unless there is a strong reason not to.
+
+---
+
+# 13. UI
+
+Keep UI clean and educational.
+
+Example:
+
+┌─────────────────────────────────────────┐
+│ Concurrency vs Parallelism Lab          │
+│                                         │
+│ Sequential | Concurrent | Parallel      │
+│                                         │
+│ Tasks     [-] 3 [+]                     │
+│ Duration  1000ms                        │
+│ Workers   3                             │
+│                                         │
+│             [ RUN ]                     │
+├─────────────────────────────────────────┤
+│                                         │
+│ Task 1 ███████████                      │
+│ Task 2 ███████████                      │
+│ Task 3 ███████████                      │
+│                                         │
+├─────────────────────────────────────────┤
+│ Running: 3     Completed: 0             │
+│ Total time: 1.02s                       │
+├─────────────────────────────────────────┤
+│                                         │
+│ CONCURRENT                              │
+│                                         │
+│ Tasks overlap while waiting.            │
+│ This does not mean three JS threads     │
+│ are executing simultaneously.           │
+│                                         │
+└─────────────────────────────────────────┘
+
+Do not spend excessive tokens implementing fancy design.
+
+Prioritize visualization clarity.
+
+---
+
+# 14. README / learning material
+
+Do NOT create 12 separate documentation files.
+
+Keep everything in README.md.
+
+Include:
+
+# Concurrency vs Parallelism Lab
+
+## Sequential Execution
+
+## What is Concurrency?
+
+## What is Parallelism?
+
+## Promise.all
+
+## Event Loop
+
+## CPU Blocking
+
+## Web Workers
+
+## Concurrency Limits
+
+## Concurrency vs Parallelism
+
+## Common Interview Questions
+
+Keep explanations beginner-friendly.
+
+---
+
+# 15. Interview section
+
+Include concise answers for:
+
+"What is concurrency?"
+
+"What is parallelism?"
+
+"What is the difference?"
+
+"Does Promise.all run in parallel?"
+
+"Does async/await create another thread?"
+
+"What are Web Workers?"
+
+"Why can CPU-heavy JavaScript freeze the UI?"
+
+Example mental model:
+
+Concurrency:
+
+One chef handles multiple dishes.
+
+Start pasta → wait for boiling water
+Start steak → wait
+Check pasta
+Check steak
+
+Multiple tasks are in progress.
+
+Parallelism:
+
+Three chefs cook three dishes simultaneously.
+
+Multiple tasks are executing at the same time.
+
+Explain that this analogy is simplified but useful.
+
+---
+
+# 16. Verification
+
+Actually run the project.
+
+Verify:
+
+Sequential:
+3 × 1-second tasks ≈ 3 seconds
+
+Concurrent:
+3 × 1-second async tasks ≈ 1 second
+
+Blocking:
+UI heartbeat visibly freezes
+
+Web Workers:
+UI heartbeat continues while CPU work executes
+
+Concurrency limit:
+Active tasks never exceed configured limit
+
+Do not claim results without running them.
+
+Timing does not need to be exact because browser scheduling varies.
+
+---
+
+# 17. Execution order
+
+Follow this order:
+
+1. Read this prompt.
+2. Check obra/superpowers.
+3. Configure only relevant skills/workflow.
+4. Create a very short implementation plan.
+5. Create frontend project.
+6. Implement timeline visualization.
+7. Implement sequential demo.
+8. Implement concurrent demo.
+9. Implement blocking demo.
+10. Implement Web Worker parallel demo.
+11. Implement concurrency-limit demo.
+12. Add explanation panels.
+13. Add minimal README.
+14. Run and test.
+15. Fix issues.
+16. Give me a concise final report.
+
+IMPORTANT:
+
+Do not overengineer.
+
+Do not introduce a backend.
+
+Do not add infrastructure.
+
+Do not create excessive documentation.
+
+Do not spend tokens discussing production architecture.
+
+The goal is:
+
+OPEN PAGE
+→ SELECT EXPERIMENT
+→ CLICK RUN
+→ WATCH WHAT HAPPENS
+→ UNDERSTAND THE DIFFERENCE
+
+Optimize every implementation decision for that goal.
